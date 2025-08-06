@@ -595,7 +595,9 @@ def project_layers_data(request, project_id):
     layers = project.layers.all()
     
     layers_data = []
+    print(f"Processing {layers.count()} layers for project {project.name}")
     for layer in layers:
+        print(f"Processing layer: {layer.name} (ID: {layer.id})")
         try:
             # Handle both string paths and FieldFile objects
             if hasattr(layer.file_path, 'path'):
@@ -611,13 +613,15 @@ def project_layers_data(request, project_id):
                     'id': layer.id,
                     'name': layer.name,
                     'layer_type': layer.layer_type,
-                    'description': layer.description,
+                    'description': f'{layer.name} ({layer.get_layer_type_display()}) layer',
                     'created_at': layer.created_at.isoformat(),
                     'geojson': geojson_data
                 }
                 layers_data.append(layer_info)
         except Exception as e:
             print(f"Error loading layer {layer.name}: {e}")
+            import traceback
+            traceback.print_exc()
             continue
     
     return JsonResponse({'layers': layers_data})

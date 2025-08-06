@@ -1,0 +1,44 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Test Point 1",
+        "description": "A test point for layer loading"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-74.006, 40.7128]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Test Point 2",
+        "description": "Another test point"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-0.1278, 51.5074]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Test Polygon",
+        "description": "A test polygon area"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-74.1, 40.7],
+          [-74.0, 40.7],
+          [-74.0, 40.8],
+          [-74.1, 40.8],
+          [-74.1, 40.7]
+        ]]
+      }
+    }
+  ]
+} 
