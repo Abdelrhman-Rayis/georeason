@@ -563,8 +563,12 @@ def layer_data(request, project_id, layer_id):
     layer = get_object_or_404(MundiLayer, id=layer_id, project=project)
     
     try:
-        # Read the GeoJSON file
-        file_path = os.path.join(settings.MEDIA_ROOT, layer.file_path)
+        # Handle both string paths and FieldFile objects
+        if hasattr(layer.file_path, 'path'):
+            file_path = layer.file_path.path
+        else:
+            file_path = os.path.join(settings.MEDIA_ROOT, str(layer.file_path))
+        
         if os.path.exists(file_path):
             with open(file_path, 'r') as f:
                 geojson_data = json.load(f)
@@ -593,7 +597,12 @@ def project_layers_data(request, project_id):
     layers_data = []
     for layer in layers:
         try:
-            file_path = os.path.join(settings.MEDIA_ROOT, layer.file_path)
+            # Handle both string paths and FieldFile objects
+            if hasattr(layer.file_path, 'path'):
+                file_path = layer.file_path.path
+            else:
+                file_path = os.path.join(settings.MEDIA_ROOT, str(layer.file_path))
+            
             if os.path.exists(file_path):
                 with open(file_path, 'r') as f:
                     geojson_data = json.load(f)

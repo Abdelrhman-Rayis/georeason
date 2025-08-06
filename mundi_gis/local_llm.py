@@ -155,6 +155,13 @@ class LocalLLMService:
         except (KeyError, IndexError) as e:
             return f"Error parsing response: {str(e)}"
     
+    def analyze_text(self, text: str) -> str:
+        """Analyze text using the local LLM"""
+        return self._make_chat_completion(
+            "You are a helpful AI assistant. Provide clear, informative responses.",
+            text
+        )
+    
     def test_connection(self) -> Dict[str, Any]:
         """Test the connection to Ollama and return status"""
         try:
