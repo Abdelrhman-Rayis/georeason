@@ -187,6 +187,22 @@
     </div>
 </div>
 
+<!-- World Map Section -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-globe me-2"></i>World Map Overview
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div id="dashboard-map" class="map-container" style="height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Help Modal -->
 <div class="modal fade" id="helpModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -234,4 +250,30 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Initialize dashboard map
+    document.addEventListener('DOMContentLoaded', function() {
+        const dashboardMap = new MundiMap('dashboard-map', {
+            center: [20, 0],
+            zoom: 2
+        });
+
+        // Add some world markers for demonstration
+        const worldCities = [
+            { lat: 40.7128, lng: -74.0060, name: 'New York', country: 'USA' },
+            { lat: 51.5074, lng: -0.1278, name: 'London', country: 'UK' },
+            { lat: 35.6762, lng: 139.6503, name: 'Tokyo', country: 'Japan' },
+            { lat: -33.8688, lng: 151.2093, name: 'Sydney', country: 'Australia' },
+            { lat: 19.0760, lng: 72.8777, name: 'Mumbai', country: 'India' }
+        ];
+
+        worldCities.forEach(city => {
+            dashboardMap.addMarker(city.lat, city.lng, {
+                title: city.name,
+                popup: `<b>${city.name}</b><br>${city.country}`
+            });
+        });
+    });
+</script>
 {% endblock %} 

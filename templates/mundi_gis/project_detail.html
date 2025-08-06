@@ -215,37 +215,115 @@
     </div>
 </div>
 
-<!-- Map Preview Section -->
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-map-marked-alt me-2"></i>Map Preview
-                </h5>
-            </div>
-            <div class="card-body">
-                <div id="map-preview" class="map-container">
-                    <div class="d-flex justify-content-center align-items-center h-100">
-                        <div class="text-center">
-                            <i class="fas fa-map fa-4x text-muted mb-3"></i>
-                            <h5 class="text-muted">Map Preview</h5>
-                            <p class="text-muted">Upload layers to see your map preview here.</p>
-                        </div>
+    <!-- Interactive Map Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-map-marked-alt me-2"></i>Interactive Map
+                    </h5>
+                    <div>
+                        <button class="btn btn-light btn-sm" onclick="addSampleData()">
+                            <i class="fas fa-plus me-1"></i>Add Sample Data
+                        </button>
+                        <button class="btn btn-light btn-sm" onclick="clearMap()">
+                            <i class="fas fa-trash me-1"></i>Clear Map
+                        </button>
                     </div>
+                </div>
+                <div class="card-body p-0">
+                    <div id="mundi-map" class="map-container" style="height: 500px;"></div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // Initialize map preview when layers are available
+    // Initialize map when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof window.mundiMap === 'undefined') {
+            window.mundiMap = new MundiMap('mundi-map', {
+                center: [0, 0],
+                zoom: 2
+            });
+        }
+    });
+
+    // Add sample data function
+    function addSampleData() {
+        if (window.mundiMap) {
+            // Sample GeoJSON data
+            const sampleGeoJSON = {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "properties": {
+                            "name": "Sample Point",
+                            "description": "This is a sample point feature"
+                        },
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [0, 0]
+                        }
+                    },
+                    {
+                        "type": "Feature",
+                        "properties": {
+                            "name": "Sample Polygon",
+                            "description": "This is a sample polygon feature"
+                        },
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [[
+                                [-1, -1],
+                                [1, -1],
+                                [1, 1],
+                                [-1, 1],
+                                [-1, -1]
+                            ]]
+                        }
+                    }
+                ]
+            };
+
+            window.mundiMap.addGeoJSONLayer(sampleGeoJSON, {
+                name: 'Sample Data',
+                style: {
+                    color: '#e74c3c',
+                    weight: 3,
+                    opacity: 0.8,
+                    fillOpacity: 0.3
+                }
+            });
+
+            // Add some markers
+            window.mundiMap.addMarker(10, 10, {
+                title: 'Sample Marker 1',
+                popup: 'This is a sample marker at coordinates (10, 10)'
+            });
+
+            window.mundiMap.addMarker(-10, -10, {
+                title: 'Sample Marker 2',
+                popup: 'This is another sample marker at coordinates (-10, -10)'
+            });
+        }
+    }
+
+    // Clear map function
+    function clearMap() {
+        if (window.mundiMap) {
+            window.mundiMap.clearLayers();
+        }
+    }
+
+    // Add project-specific data if layers exist
     {% if layers %}
-        // This would integrate with Mundi API to show the actual map
-        console.log('Map preview would be initialized here with {{ layers.count }} layers');
+        console.log('Project has {{ layers.count }} layers');
+        // Here you could load actual layer data from the database
     {% endif %}
 </script>
 {% endblock %} 
