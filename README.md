@@ -288,8 +288,7 @@ This project is licensed under the AGPL-3.0 License - see the [LICENSE](LICENSE)
 - **Mundi.ai Community**: [Discord](https://discord.gg/mundi-ai)
 
 Demo
-<!-- Uploading "screencapture-127-0-0-1-8000-mundi-projects-bb81bc61-61ac-4ea6-88f9-2d677646f692-ai-chat-2025-08-06-06_15_54.png"... -->
-
+<img width="2992" height="2396" alt="Image" src="https://github.com/user-attachments/assets/bab2904f-5f8b-4d81-b585-f713e638ddaa" />
 
 ---
 
