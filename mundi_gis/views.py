@@ -64,6 +64,8 @@ def dashboard(request):
         'total_projects': total_projects,
         'total_layers': total_layers,
         'total_renders': total_renders,
+        'mundi_api_available': bool(MUNDI_API_KEY),
+        'ollama_available': LocalLLMService().is_available(),
     }
     
     return render(request, 'mundi_gis/dashboard.html', context)
@@ -112,21 +114,32 @@ def project_create(request):
             project = form.save(commit=False)
             project.created_by = request.user
             
-            # Create project in Mundi API
-            api_data = {
-                'name': project.name,
-                'description': project.description,
-            }
-            
-            api_response = mundi_api_request('maps', method='POST', data=api_data)
-            
-            if 'error' not in api_response:
-                project.mundi_project_id = api_response.get('id')
-                project.save()
-                messages.success(request, 'Map project created successfully!')
-                return redirect('mundi_gis:project_detail', project_id=project.id)
+            # Try to create project in Mundi API (optional)
+            if MUNDI_API_KEY:
+                api_data = {
+                    'name': project.name,
+                    'description': project.description,
+                }
+                
+                api_response = mundi_api_request('maps', method='POST', data=api_data)
+                
+                if 'error' not in api_response:
+                    project.mundi_project_id = api_response.get('id')
+                    project.save()
+                    messages.success(request, 'Map project created successfully with Mundi AI integration!')
+                    return redirect('mundi_gis:project_detail', project_id=project.id)
+                else:
+                    # If API fails, still save locally but warn user
+                    project.mundi_project_id = f"local_{project.id}"
+                    project.save()
+                    messages.warning(request, f'Project created locally. Mundi AI integration failed: {api_response["error"]}')
+                    return redirect('mundi_gis:project_detail', project_id=project.id)
             else:
-                messages.error(request, f'Failed to create project: {api_response["error"]}')
+                # No API key configured, save locally only
+                project.mundi_project_id = f"local_{project.id}"
+                project.save()
+                messages.success(request, 'Map project created successfully! (Local mode - no Mundi AI integration)')
+                return redirect('mundi_gis:project_detail', project_id=project.id)
     else:
         form = MundiMapProjectForm()
     
@@ -148,20 +161,26 @@ def project_update(request, project_id):
         if form.is_valid():
             project = form.save()
             
-            # Update project in Mundi API
-            api_data = {
-                'name': project.name,
-                'description': project.description,
-            }
-            
-            api_response = mundi_api_request(f'maps/{project.mundi_project_id}', 
-                                           method='PUT', data=api_data)
-            
-            if 'error' not in api_response:
-                messages.success(request, 'Map project updated successfully!')
-                return redirect('mundi_gis:project_detail', project_id=project.id)
+            # Try to update project in Mundi API (optional)
+            if MUNDI_API_KEY and not project.mundi_project_id.startswith('local_'):
+                api_data = {
+                    'name': project.name,
+                    'description': project.description,
+                }
+                
+                api_response = mundi_api_request(f'maps/{project.mundi_project_id}', 
+                                               method='PUT', data=api_data)
+                
+                if 'error' not in api_response:
+                    messages.success(request, 'Map project updated successfully with Mundi AI integration!')
+                    return redirect('mundi_gis:project_detail', project_id=project.id)
+                else:
+                    messages.warning(request, f'Project updated locally. Mundi AI integration failed: {api_response["error"]}')
+                    return redirect('mundi_gis:project_detail', project_id=project.id)
             else:
-                messages.error(request, f'Failed to update project: {api_response["error"]}')
+                # No API key or local project, save locally only
+                messages.success(request, 'Map project updated successfully! (Local mode)')
+                return redirect('mundi_gis:project_detail', project_id=project.id)
     else:
         form = MundiMapProjectForm(instance=project)
     
@@ -180,17 +199,28 @@ def project_delete(request, project_id):
     project = get_object_or_404(MundiMapProject, id=project_id, created_by=request.user)
     
     if request.method == 'POST':
-        # Delete project from Mundi API
-        api_response = mundi_api_request(f'maps/{project.mundi_project_id}', 
-                                       method='DELETE')
-        
-        if 'error' not in api_response:
+        # Try to delete project from Mundi API (optional)
+        if MUNDI_API_KEY and not project.mundi_project_id.startswith('local_'):
+            api_response = mundi_api_request(f'maps/{project.mundi_project_id}', 
+                                           method='DELETE')
+            
+            if 'error' not in api_response:
+                project.is_active = False
+                project.save()
+                messages.success(request, 'Map project deleted successfully from Mundi AI!')
+                return redirect('mundi_gis:project_list')
+            else:
+                # If API fails, still delete locally
+                project.is_active = False
+                project.save()
+                messages.warning(request, f'Project deleted locally. Mundi AI deletion failed: {api_response["error"]}')
+                return redirect('mundi_gis:project_list')
+        else:
+            # No API key or local project, delete locally only
             project.is_active = False
             project.save()
-            messages.success(request, 'Map project deleted successfully!')
+            messages.success(request, 'Map project deleted successfully! (Local mode)')
             return redirect('mundi_gis:project_list')
-        else:
-            messages.error(request, f'Failed to delete project: {api_response["error"]}')
     
     context = {
         'project': project,
@@ -210,25 +240,37 @@ def layer_upload(request, project_id):
             layer = form.save(commit=False)
             layer.map_project = project
             
-            # Upload file to Mundi API
+            # Upload file to Mundi API (optional)
             if request.FILES.get('file_path'):
-                files = {'file': request.FILES['file_path']}
-                headers = {'Authorization': f'Bearer {MUNDI_API_KEY}'}
-                
-                upload_url = f"{MUNDI_API_BASE_URL}/maps/{project.mundi_project_id}/layers"
-                
-                try:
-                    response = requests.post(upload_url, files=files, headers=headers)
-                    response.raise_for_status()
-                    api_response = response.json()
+                if MUNDI_API_KEY and not project.mundi_project_id.startswith('local_'):
+                    files = {'file': request.FILES['file_path']}
+                    headers = {'Authorization': f'Bearer {MUNDI_API_KEY}'}
                     
-                    layer.mundi_layer_id = api_response.get('id')
+                    upload_url = f"{MUNDI_API_BASE_URL}/maps/{project.mundi_project_id}/layers"
+                    
+                    try:
+                        response = requests.post(upload_url, files=files, headers=headers)
+                        response.raise_for_status()
+                        api_response = response.json()
+                        
+                        layer.mundi_layer_id = api_response.get('id')
+                        layer.save()
+                        
+                        messages.success(request, 'Layer uploaded successfully with Mundi AI integration!')
+                        return redirect('mundi_gis:project_detail', project_id=project.id)
+                    except requests.exceptions.RequestException as e:
+                        # If API fails, still save locally
+                        layer.mundi_layer_id = f"local_{layer.id}"
+                        layer.save()
+                        messages.warning(request, f'Layer saved locally. Mundi AI upload failed: {str(e)}')
+                        return redirect('mundi_gis:project_detail', project_id=project.id)
+                else:
+                    # No API key or local project, save locally only
+                    layer.mundi_layer_id = f"local_{layer.id}"
                     layer.save()
                     
-                    messages.success(request, 'Layer uploaded successfully!')
+                    messages.success(request, 'Layer uploaded successfully! (Local mode)')
                     return redirect('mundi_gis:project_detail', project_id=project.id)
-                except requests.exceptions.RequestException as e:
-                    messages.error(request, f'Failed to upload layer: {str(e)}')
     else:
         form = MundiLayerForm()
     
@@ -249,28 +291,41 @@ def render_map(request, project_id):
         width = request.POST.get('width', 800)
         height = request.POST.get('height', 600)
         
-        # Render map via Mundi API
-        api_data = {
-            'width': int(width),
-            'height': int(height),
-        }
-        
-        api_response = mundi_api_request(f'maps/{project.mundi_project_id}/render', 
-                                       method='POST', data=api_data)
-        
-        if 'error' not in api_response:
+        # Render map via Mundi API (optional)
+        if MUNDI_API_KEY and not project.mundi_project_id.startswith('local_'):
+            api_data = {
+                'width': int(width),
+                'height': int(height),
+            }
+            
+            api_response = mundi_api_request(f'maps/{project.mundi_project_id}/render', 
+                                           method='POST', data=api_data)
+            
+            if 'error' not in api_response:
+                render_obj = MundiMapRender.objects.create(
+                    map_project=project,
+                    render_id=api_response.get('id'),
+                    width=width,
+                    height=height,
+                    image_file=api_response.get('image_url')
+                )
+                
+                messages.success(request, 'Map rendered successfully with Mundi AI!')
+                return redirect('mundi_gis:project_detail', project_id=project.id)
+            else:
+                messages.warning(request, f'Map rendering failed: {api_response["error"]}. Try using local mode.')
+                return redirect('mundi_gis:project_detail', project_id=project.id)
+        else:
+            # Local mode - create a placeholder render
             render_obj = MundiMapRender.objects.create(
                 map_project=project,
-                render_id=api_response.get('id'),
+                render_id=f"local_render_{project.id}_{int(width)}x{int(height)}",
                 width=width,
-                height=height,
-                image_file=api_response.get('image_url')
+                height=height
             )
             
-            messages.success(request, 'Map rendered successfully!')
+            messages.success(request, 'Map render created successfully! (Local mode - no actual image generated)')
             return redirect('mundi_gis:project_detail', project_id=project.id)
-        else:
-            messages.error(request, f'Failed to render map: {api_response["error"]}')
     
     context = {
         'project': project,

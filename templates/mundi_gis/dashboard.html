@@ -137,21 +137,51 @@
             </div>
         </div>
 
-        <!-- Mundi AI Integration Info -->
+        <!-- System Status -->
         <div class="card mt-4">
             <div class="card-header bg-info text-white">
                 <h5 class="mb-0">
-                    <i class="fas fa-robot me-2"></i>AI-Powered GIS
+                    <i class="fas fa-server me-2"></i>System Status
                 </h5>
             </div>
             <div class="card-body">
-                <p class="card-text small">
-                    This application integrates with <strong>Mundi AI</strong>, an open-source, 
-                    AI-native GIS platform that provides advanced geospatial analysis and visualization capabilities.
-                </p>
-                <a href="https://docs.mundi.ai/" target="_blank" class="btn btn-sm btn-outline-info">
-                    <i class="fas fa-external-link-alt me-1"></i>Learn More
-                </a>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-cloud me-2"></i>Mundi AI Integration</h6>
+                        {% if mundi_api_available %}
+                            <span class="badge bg-success">Available</span>
+                            <small class="text-muted d-block">Cloud-based GIS features enabled</small>
+                        {% else %}
+                            <span class="badge bg-warning">Local Mode</span>
+                            <small class="text-muted d-block">Running without cloud integration</small>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-robot me-2"></i>Local LLM (Ollama)</h6>
+                        {% if ollama_available %}
+                            <span class="badge bg-success">Available</span>
+                            <small class="text-muted d-block">Offline AI analysis enabled</small>
+                        {% else %}
+                            <span class="badge bg-danger">Not Available</span>
+                            <small class="text-muted d-block">Start Ollama for AI features</small>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="d-grid gap-2">
+                    {% if not mundi_api_available %}
+                        <a href="https://docs.mundi.ai/" target="_blank" class="btn btn-sm btn-outline-info">
+                            <i class="fas fa-external-link-alt me-1"></i>Setup Mundi AI Integration
+                        </a>
+                    {% endif %}
+                    {% if not ollama_available %}
+                        <button class="btn btn-sm btn-outline-warning" onclick="alert('Start Ollama server: ollama serve')">
+                            <i class="fas fa-play me-1"></i>Start Ollama Server
+                        </button>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
