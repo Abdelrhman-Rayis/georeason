@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
+from django.conf import settings
 import requests
 import json
 import os
@@ -317,9 +318,10 @@ def render_map(request, project_id):
                 return redirect('mundi_gis:project_detail', project_id=project.id)
         else:
             # Local mode - create a placeholder render
+            import time
             render_obj = MundiMapRender.objects.create(
                 map_project=project,
-                render_id=f"local_render_{project.id}_{int(width)}x{int(height)}",
+                render_id=f"local_render_{project.id}_{int(width)}x{int(height)}_{int(time.time())}",
                 width=width,
                 height=height
             )
@@ -489,6 +491,69 @@ def ai_analysis_page(request, project_id):
     }
     
     return render(request, 'mundi_gis/ai_analysis.html', context)
+
+
+@login_required
+def ai_chat_page(request, project_id):
+    """AI Chat interface for a project"""
+    project = get_object_or_404(MundiMapProject, id=project_id, created_by=request.user)
+    
+    context = {
+        'project': project,
+    }
+    
+    return render(request, 'mundi_gis/ai_chat.html', context)
+
+
+@login_required
+def ai_analyze_project(request):
+    """Analyze project with AI"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        question = data.get('question', '')
+        project_info = data.get('project_info', {})
+        
+        if not question:
+            return JsonResponse({'error': 'Question is required'}, status=400)
+        
+        llm_service = LocalLLMService()
+        
+        if not llm_service.is_available():
+            return JsonResponse({
+                'error': 'Local LLM (Ollama) is not available. Please make sure Ollama is running.',
+                'available': False
+            }, status=503)
+        
+        # Create a comprehensive prompt for the AI
+        prompt = f"""
+        You are a GIS (Geographic Information System) expert assistant. Analyze the following project and answer the user's question.
+
+        Project Information:
+        - Name: {project_info.get('name', 'Unknown')}
+        - Description: {project_info.get('description', 'No description')}
+        - Number of Layers: {project_info.get('layer_count', 0)}
+        
+        Layers:
+        {chr(10).join([f"- {layer.get('name', 'Unknown')} ({layer.get('type', 'Unknown')}): {layer.get('description', 'No description')}" for layer in project_info.get('layers', [])])}
+
+        User Question: {question}
+
+        Please provide a detailed, helpful response that demonstrates your GIS expertise. If the question is about data analysis, suggest what insights could be gained. If it's about styling, provide specific recommendations. If it's about the project structure, explain the components and their purposes.
+        """
+        
+        analysis = llm_service.analyze_text(prompt)
+        
+        return JsonResponse({
+            'analysis': analysis,
+            'question': question,
+            'available': True
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 @login_required

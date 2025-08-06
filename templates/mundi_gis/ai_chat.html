@@ -1,0 +1,436 @@
+{% extends 'mundi_gis/base.html' %}
+{% load static %}
+
+{% block title %}AI Chat - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Map and Layers Panel -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-map-marked-alt me-2"></i>{{ project.name }} - Interactive Map
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div id="ai-chat-map" class="map-container" style="height: 500px;"></div>
+                </div>
+            </div>
+            
+            <!-- Layer Controls -->
+            <div class="card mt-3">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-layers me-2"></i>Layer Controls
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div id="layer-controls">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted">Available Layers:</span>
+                            <button class="btn btn-sm btn-outline-primary" onclick="loadProjectLayers()">
+                                <i class="fas fa-sync me-1"></i>Refresh Layers
+                            </button>
+                        </div>
+                        <div id="layer-list" class="list-group">
+                            <!-- Layers will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- AI Chat Panel -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-robot me-2"></i>AI Chat Assistant
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Chat Messages -->
+                    <div id="chat-messages" class="chat-container" style="height: 300px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 10px; margin-bottom: 15px;">
+                        <div class="chat-message ai-message">
+                            <div class="message-content">
+                                <strong>AI Assistant:</strong> Hello! I'm here to help you analyze your GIS data. You can ask me questions about your layers, request analysis, or get styling suggestions. What would you like to know?
+                            </div>
+                            <small class="text-muted">Just now</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Chat Input -->
+                    <div class="chat-input">
+                        <div class="input-group">
+                            <input type="text" id="chat-input" class="form-control" placeholder="Ask me about your GIS data..." maxlength="500">
+                            <button class="btn btn-primary" type="button" onclick="sendMessage()">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted">Press Enter to send</small>
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="mt-3">
+                        <h6>Quick Actions:</h6>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-info btn-sm" onclick="askQuestion('What can you tell me about the data in my layers?')">
+                                <i class="fas fa-info-circle me-1"></i>Analyze Data
+                            </button>
+                            <button class="btn btn-outline-warning btn-sm" onclick="askQuestion('Suggest styling for my layers')">
+                                <i class="fas fa-palette me-1"></i>Styling Suggestions
+                            </button>
+                            <button class="btn btn-outline-success btn-sm" onclick="askQuestion('Generate a description of this project')">
+                                <i class="fas fa-file-alt me-1"></i>Project Description
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI Status -->
+            <div class="card mt-3">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-server me-2"></i>AI Status
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div id="ai-status">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Local LLM (Ollama):</span>
+                            <span id="ollama-status" class="badge bg-warning">Checking...</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <span>Model:</span>
+                            <span id="model-name" class="text-muted">Unknown</span>
+                        </div>
+                        <button class="btn btn-sm btn-outline-secondary mt-2" onclick="checkAIStatus()">
+                            <i class="fas fa-sync me-1"></i>Check Status
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.chat-message {
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.user-message {
+    background-color: #e3f2fd;
+    border-left: 4px solid #2196f3;
+}
+
+.ai-message {
+    background-color: #f3e5f5;
+    border-left: 4px solid #9c27b0;
+}
+
+.message-content {
+    margin-bottom: 5px;
+}
+
+.chat-input {
+    margin-top: 15px;
+}
+
+#chat-input:focus {
+    border-color: #9c27b0;
+    box-shadow: 0 0 0 0.2rem rgba(156, 39, 176, 0.25);
+}
+
+.layer-item {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.layer-item:hover {
+    background-color: #f8f9fa;
+}
+
+.layer-item.active {
+    background-color: #e3f2fd;
+    border-color: #2196f3;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let aiChatMap = null;
+let currentLayers = [];
+
+// Initialize map and AI chat
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Initializing AI Chat interface...');
+    
+    // Initialize map
+    aiChatMap = new MundiMap('ai-chat-map', {
+        center: [20, 0],
+        zoom: 2
+    });
+    
+    // Load project layers
+    loadProjectLayers();
+    
+    // Check AI status
+    checkAIStatus();
+    
+    // Setup chat input
+    document.getElementById('chat-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+});
+
+// Load project layers
+function loadProjectLayers() {
+    const projectId = '{{ project.id }}';
+    
+    fetch(`/mundi/projects/${projectId}/layers-data/`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('Layers data:', data);
+            currentLayers = data.layers || [];
+            displayLayers();
+            loadLayersOnMap();
+        })
+        .catch(error => {
+            console.error('Error loading layers:', error);
+            addChatMessage('Error loading layers. Please try again.', 'error');
+        });
+}
+
+// Display layers in the layer list
+function displayLayers() {
+    const layerList = document.getElementById('layer-list');
+    layerList.innerHTML = '';
+    
+    if (currentLayers.length === 0) {
+        layerList.innerHTML = '<div class="text-center text-muted py-3">No layers available</div>';
+        return;
+    }
+    
+    currentLayers.forEach(layer => {
+        const layerItem = document.createElement('div');
+        layerItem.className = 'list-group-item layer-item d-flex justify-content-between align-items-center';
+        layerItem.innerHTML = `
+            <div>
+                <strong>${layer.name}</strong>
+                <br><small class="text-muted">${layer.layer_type}</small>
+            </div>
+            <button class="btn btn-sm btn-outline-primary" onclick="analyzeLayer('${layer.id}')">
+                <i class="fas fa-brain"></i> Analyze
+            </button>
+        `;
+        layerList.appendChild(layerItem);
+    });
+}
+
+// Load layers on the map
+function loadLayersOnMap() {
+    if (!aiChatMap) return;
+    
+    currentLayers.forEach(layer => {
+        if (layer.geojson) {
+            const layerOptions = {
+                style: getLayerStyle(layer.layer_type),
+                onEachFeature: function(feature, layer) {
+                    if (feature.properties) {
+                        layer.bindPopup(`
+                            <strong>${layer.name}</strong><br>
+                            <small>${JSON.stringify(feature.properties, null, 2)}</small>
+                        `);
+                    }
+                }
+            };
+            
+            aiChatMap.addGeoJSONLayer(layer.geojson, layerOptions);
+        }
+    });
+}
+
+// Get layer style based on type
+function getLayerStyle(layerType) {
+    switch (layerType) {
+        case 'vector':
+            return {
+                color: '#ff7800',
+                weight: 2,
+                opacity: 0.8,
+                fillColor: '#ff7800',
+                fillOpacity: 0.2
+            };
+        case 'raster':
+            return {
+                color: '#3388ff',
+                weight: 1,
+                opacity: 0.8
+            };
+        default:
+            return {
+                color: '#3388ff',
+                weight: 2,
+                opacity: 0.8
+            };
+    }
+}
+
+// Send chat message
+function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    // Add user message
+    addChatMessage(`<strong>You:</strong> ${message}`, 'user');
+    input.value = '';
+    
+    // Show typing indicator
+    addChatMessage('<em>AI is thinking...</em>', 'ai');
+    
+    // Send to AI
+    analyzeWithAI(message);
+}
+
+// Ask a specific question
+function askQuestion(question) {
+    document.getElementById('chat-input').value = question;
+    sendMessage();
+}
+
+// Analyze with AI
+function analyzeWithAI(question) {
+    const projectId = '{{ project.id }}';
+    
+    // Prepare project info
+    const projectInfo = {
+        name: '{{ project.name }}',
+        description: '{{ project.description }}',
+        layer_count: currentLayers.length,
+        layers: currentLayers.map(layer => ({
+            name: layer.name,
+            type: layer.layer_type,
+            description: layer.description
+        }))
+    };
+    
+    // Send to AI endpoint
+    fetch('/mundi/ai/analyze-project/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            project_id: projectId,
+            question: question,
+            project_info: projectInfo
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Remove typing indicator
+        removeLastMessage();
+        
+        if (data.error) {
+            addChatMessage(`<strong>AI Error:</strong> ${data.error}`, 'error');
+        } else {
+            addChatMessage(`<strong>AI Assistant:</strong> ${data.analysis}`, 'ai');
+        }
+    })
+    .catch(error => {
+        console.error('AI analysis error:', error);
+        removeLastMessage();
+        addChatMessage('<strong>AI Error:</strong> Failed to get response. Please try again.', 'error');
+    });
+}
+
+// Analyze specific layer
+function analyzeLayer(layerId) {
+    const layer = currentLayers.find(l => l.id === layerId);
+    if (!layer) return;
+    
+    const question = `Tell me about the layer "${layer.name}"`;
+    askQuestion(question);
+}
+
+// Add chat message
+function addChatMessage(content, type = 'ai') {
+    const chatMessages = document.getElementById('chat-messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${type}-message`;
+    
+    const now = new Date();
+    const timeString = now.toLocaleTimeString();
+    
+    messageDiv.innerHTML = `
+        <div class="message-content">${content}</div>
+        <small class="text-muted">${timeString}</small>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Remove last message (for typing indicator)
+function removeLastMessage() {
+    const chatMessages = document.getElementById('chat-messages');
+    const messages = chatMessages.querySelectorAll('.chat-message');
+    if (messages.length > 0) {
+        messages[messages.length - 1].remove();
+    }
+}
+
+// Check AI status
+function checkAIStatus() {
+    fetch('/mundi/ai/test-connection/')
+        .then(response => response.json())
+        .then(data => {
+            const statusElement = document.getElementById('ollama-status');
+            const modelElement = document.getElementById('model-name');
+            
+            if (data.available) {
+                statusElement.className = 'badge bg-success';
+                statusElement.textContent = 'Available';
+                modelElement.textContent = data.model || 'Unknown';
+            } else {
+                statusElement.className = 'badge bg-danger';
+                statusElement.textContent = 'Not Available';
+                modelElement.textContent = 'Not Connected';
+            }
+        })
+        .catch(error => {
+            console.error('Status check error:', error);
+            document.getElementById('ollama-status').className = 'badge bg-danger';
+            document.getElementById('ollama-status').textContent = 'Error';
+        });
+}
+
+// Get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %} 
