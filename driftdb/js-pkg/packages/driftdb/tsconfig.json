@@ -1,0 +1,18 @@
+{
+    "extends": "../tsconfig/base.json",
+    "compilerOptions": {
+        "target": "es2015",
+        "lib": ["esnext", "dom"],
+        "composite": true,
+        "outDir": "dist",
+        "rootDir": "src",
+    },
+    "include": [
+        "."
+    ],
+    "exclude": [
+        "dist",
+        "build",
+        "node_modules",
+    ],
+}

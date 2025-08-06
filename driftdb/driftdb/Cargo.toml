@@ -1,0 +1,17 @@
+[package]
+name = "driftdb"
+version = "0.1.4"
+edition = "2021"
+description = "A real-time data backend for browser-based applications (core library)."
+license = "MIT"
+repository = "https://github.com/drifting-in-space/driftdb"
+homepage = "https://driftdb.com"
+documentation = "https://driftdb.com"
+readme = "README.md"
+
+[dependencies]
+ciborium = "0.2.1"
+serde = { version = "1.0.152", features = ["derive"] }
+
+[dev-dependencies]
+serde_json = "1.0.91"
