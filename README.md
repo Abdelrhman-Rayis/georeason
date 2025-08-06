@@ -287,12 +287,10 @@ This project is licensed under the AGPL-3.0 License - see the [LICENSE](LICENSE)
 - **Documentation**: [Project Wiki](https://github.com/Abdelrhman-Rayis/georeason/wiki)
 - **Mundi.ai Community**: [Discord](https://discord.gg/mundi-ai)
 
-## 🌟 Star History
+Demo
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Abdelrhman-Rayis/georeason&type=Date)](https://star-history.com/#Abdelrhman-Rayis/georeason&Date)
 
 ---
 
-**Made with ❤️ by the GeoReason Team**
-
-*Empowering GIS with AI, one map at a time.* 
+ 
+ 
