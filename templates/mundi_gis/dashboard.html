@@ -254,26 +254,50 @@
 <script>
     // Initialize dashboard map
     document.addEventListener('DOMContentLoaded', function() {
-        const dashboardMap = new MundiMap('dashboard-map', {
-            center: [20, 0],
-            zoom: 2
-        });
-
-        // Add some world markers for demonstration
-        const worldCities = [
-            { lat: 40.7128, lng: -74.0060, name: 'New York', country: 'USA' },
-            { lat: 51.5074, lng: -0.1278, name: 'London', country: 'UK' },
-            { lat: 35.6762, lng: 139.6503, name: 'Tokyo', country: 'Japan' },
-            { lat: -33.8688, lng: 151.2093, name: 'Sydney', country: 'Australia' },
-            { lat: 19.0760, lng: 72.8777, name: 'Mumbai', country: 'India' }
-        ];
-
-        worldCities.forEach(city => {
-            dashboardMap.addMarker(city.lat, city.lng, {
-                title: city.name,
-                popup: `<b>${city.name}</b><br>${city.country}`
+        console.log('Dashboard DOM loaded, initializing map...');
+        
+        // Check if Leaflet is loaded
+        if (typeof L === 'undefined') {
+            console.error('Leaflet is not loaded!');
+            return;
+        }
+        
+        console.log('Leaflet version:', L.version);
+        
+        // Check if container exists
+        const mapContainer = document.getElementById('dashboard-map');
+        if (!mapContainer) {
+            console.error('Map container not found!');
+            return;
+        }
+        
+        console.log('Map container found, dimensions:', mapContainer.offsetWidth, 'x', mapContainer.offsetHeight);
+        
+        // Initialize map with a slight delay to ensure container is ready
+        setTimeout(() => {
+            const dashboardMap = new MundiMap('dashboard-map', {
+                center: [20, 0],
+                zoom: 2
             });
-        });
+
+            // Add some world markers for demonstration
+            const worldCities = [
+                { lat: 40.7128, lng: -74.0060, name: 'New York', country: 'USA' },
+                { lat: 51.5074, lng: -0.1278, name: 'London', country: 'UK' },
+                { lat: 35.6762, lng: 139.6503, name: 'Tokyo', country: 'Japan' },
+                { lat: -33.8688, lng: 151.2093, name: 'Sydney', country: 'Australia' },
+                { lat: 19.0760, lng: 72.8777, name: 'Mumbai', country: 'India' }
+            ];
+
+            worldCities.forEach(city => {
+                dashboardMap.addMarker(city.lat, city.lng, {
+                    title: city.name,
+                    popup: `<b>${city.name}</b><br>${city.country}`
+                });
+            });
+            
+            console.log('Dashboard map initialization complete');
+        }, 500);
     });
 </script>
 {% endblock %} 

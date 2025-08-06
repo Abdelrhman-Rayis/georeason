@@ -15,6 +15,17 @@ class MundiMap {
     }
 
     init() {
+        console.log('Initializing MundiMap for container:', this.containerId);
+        
+        // Check if container exists
+        const container = document.getElementById(this.containerId);
+        if (!container) {
+            console.error('Map container not found:', this.containerId);
+            return;
+        }
+        
+        console.log('Container dimensions:', container.offsetWidth, 'x', container.offsetHeight);
+        
         // Initialize the map
         this.map = L.map(this.containerId, {
             center: this.options.center,
@@ -25,6 +36,8 @@ class MundiMap {
             attributionControl: true
         });
 
+        console.log('Map initialized, adding base layer...');
+        
         // Add OpenStreetMap base layer
         this.addBaseLayer();
         
@@ -54,6 +67,8 @@ class MundiMap {
     }
 
     addBaseLayer() {
+        console.log('Adding base layers...');
+        
         // OpenStreetMap base layer
         const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -87,7 +102,15 @@ class MundiMap {
         this.layerControl.addBaseLayer(satellite, 'Satellite');
 
         // Set default base layer
+        console.log('Adding OpenStreetMap layer to map...');
         osmLayer.addTo(this.map);
+        
+        // Force map refresh
+        setTimeout(() => {
+            console.log('Forcing map refresh...');
+            this.map.invalidateSize();
+        }, 100);
+    }
     }
 
     addFullscreenControl() {
