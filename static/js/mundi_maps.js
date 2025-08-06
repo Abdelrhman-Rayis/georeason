@@ -111,7 +111,6 @@ class MundiMap {
             this.map.invalidateSize();
         }, 100);
     }
-    }
 
     addFullscreenControl() {
         // Simple fullscreen control
