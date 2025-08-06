@@ -1,0 +1,207 @@
+{% extends 'mundi_gis/base.html' %}
+
+{% block title %}Dashboard - Mundi GIS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Welcome Section -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h1 class="card-title">
+                    <i class="fas fa-map-marked-alt text-primary me-3"></i>
+                    Welcome to Mundi GIS
+                </h1>
+                <p class="card-text lead">
+                    Create, manage, and visualize your geographic data with AI-powered insights
+                </p>
+                <a href="{% url 'mundi_gis:project_create' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus me-2"></i>Create Your First Map
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="col-md-3 mb-4">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <i class="fas fa-project-diagram fa-3x mb-3"></i>
+                <h3 class="card-title">{{ total_projects }}</h3>
+                <p class="card-text">Total Projects</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <i class="fas fa-layer-group fa-3x mb-3"></i>
+                <h3 class="card-title">{{ total_layers }}</h3>
+                <p class="card-text">Total Layers</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <i class="fas fa-image fa-3x mb-3"></i>
+                <h3 class="card-title">{{ total_renders }}</h3>
+                <p class="card-text">Map Renders</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-line fa-3x mb-3"></i>
+                <h3 class="card-title">{{ total_projects|add:total_layers }}</h3>
+                <p class="card-text">Total Assets</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Projects -->
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock me-2"></i>Recent Projects
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_projects %}
+                    <div class="row">
+                        {% for project in recent_projects %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <i class="fas fa-map me-2 text-primary"></i>
+                                            {{ project.name }}
+                                        </h6>
+                                        <p class="card-text text-muted small">
+                                            {{ project.description|truncatewords:10 }}
+                                        </p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted">
+                                                <i class="fas fa-calendar me-1"></i>
+                                                {{ project.created_at|date:"M d, Y" }}
+                                            </small>
+                                            <a href="{% url 'mundi_gis:project_detail' project.id %}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                View
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-map fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No projects yet</h5>
+                        <p class="text-muted">Create your first map project to get started!</p>
+                        <a href="{% url 'mundi_gis:project_create' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Create Project
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'mundi_gis:project_create' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-plus me-2"></i>New Map Project
+                    </a>
+                    <a href="{% url 'mundi_gis:project_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-list me-2"></i>View All Projects
+                    </a>
+                    <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#helpModal">
+                        <i class="fas fa-question-circle me-2"></i>Get Help
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mundi AI Integration Info -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-robot me-2"></i>AI-Powered GIS
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text small">
+                    This application integrates with <strong>Mundi AI</strong>, an open-source, 
+                    AI-native GIS platform that provides advanced geospatial analysis and visualization capabilities.
+                </p>
+                <a href="https://docs.mundi.ai/" target="_blank" class="btn btn-sm btn-outline-info">
+                    <i class="fas fa-external-link-alt me-1"></i>Learn More
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-question-circle me-2"></i>Getting Started with Mundi GIS
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-map me-2 text-primary"></i>1. Create a Map Project</h6>
+                        <p class="small">Start by creating a new map project to organize your geographic data.</p>
+                        
+                        <h6><i class="fas fa-upload me-2 text-success"></i>2. Upload Layers</h6>
+                        <p class="small">Upload your GIS files (GeoJSON, Shapefile, GeoTIFF, etc.) as layers.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-palette me-2 text-warning"></i>3. Style Your Data</h6>
+                        <p class="small">Customize the appearance of your layers with styling options.</p>
+                        
+                        <h6><i class="fas fa-image me-2 text-info"></i>4. Render Maps</h6>
+                        <p class="small">Generate high-quality map images for reports and presentations.</p>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h6><i class="fas fa-lightbulb me-2 text-warning"></i>Pro Tips:</h6>
+                <ul class="small">
+                    <li>Use descriptive names for your projects and layers</li>
+                    <li>Organize related layers within the same project</li>
+                    <li>Experiment with different styling options</li>
+                    <li>Save your renders for future reference</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="https://docs.mundi.ai/" target="_blank" class="btn btn-primary">
+                    <i class="fas fa-external-link-alt me-1"></i>View Documentation
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
