@@ -36,16 +36,16 @@ class MundiMap {
             attributionControl: true
         });
 
-        console.log('Map initialized, adding base layer...');
+        console.log('Map initialized, setting up controls...');
         
-        // Add OpenStreetMap base layer
-        this.addBaseLayer();
-        
-        // Add layer control
+        // Add layer control first
         this.layerControl = L.control.layers(null, null, {
             collapsed: false,
             position: 'topright'
         }).addTo(this.map);
+        
+        // Add OpenStreetMap base layer
+        this.addBaseLayer();
 
         // Add scale control
         L.control.scale({
