@@ -10,6 +10,7 @@ import json
 import os
 from .models import MundiMapProject, MundiLayer, MundiMapRender
 from .forms import MundiMapProjectForm, MundiLayerForm
+from .local_llm import LocalLLMService
 
 
 # Mundi API configuration
@@ -300,3 +301,136 @@ def mundi_webhook(request):
         return JsonResponse({'status': 'success'})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
+
+
+@login_required
+def ai_analyze_layer(request, layer_id):
+    """Analyze a layer using local LLM"""
+    try:
+        layer = get_object_or_404(MundiLayer, id=layer_id, map_project__created_by=request.user)
+        question = request.POST.get('question', 'Tell me about this layer')
+        
+        llm_service = LocalLLMService()
+        
+        if not llm_service.is_available():
+            return JsonResponse({
+                'error': 'Local LLM (Ollama) is not available. Please make sure Ollama is running.',
+                'available': False
+            }, status=503)
+        
+        layer_info = {
+            'name': layer.name,
+            'layer_type': layer.get_layer_type_display(),
+            'feature_count': 'Unknown',  # Would need to be calculated from actual data
+            'geometry_type': 'Unknown',  # Would need to be extracted from file
+            'description': f'Layer uploaded on {layer.created_at.strftime("%Y-%m-%d")}',
+            'created_at': layer.created_at.strftime("%Y-%m-%d")
+        }
+        
+        analysis = llm_service.analyze_gis_data(layer_info, question)
+        
+        return JsonResponse({
+            'analysis': analysis,
+            'question': question,
+            'layer_name': layer.name,
+            'available': True
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def ai_suggest_styling(request, layer_id):
+    """Get AI suggestions for layer styling"""
+    try:
+        layer = get_object_or_404(MundiLayer, id=layer_id, map_project__created_by=request.user)
+        
+        llm_service = LocalLLMService()
+        
+        if not llm_service.is_available():
+            return JsonResponse({
+                'error': 'Local LLM (Ollama) is not available.',
+                'available': False
+            }, status=503)
+        
+        layer_info = {
+            'name': layer.name,
+            'layer_type': layer.get_layer_type_display(),
+            'geometry_type': 'Unknown',
+            'feature_count': 'Unknown'
+        }
+        
+        styling_suggestions = llm_service.suggest_layer_styling(layer_info)
+        
+        return JsonResponse({
+            'styling': styling_suggestions,
+            'layer_name': layer.name,
+            'available': True
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def ai_generate_description(request, project_id):
+    """Generate AI description for a project"""
+    try:
+        project = get_object_or_404(MundiMapProject, id=project_id, created_by=request.user)
+        
+        llm_service = LocalLLMService()
+        
+        if not llm_service.is_available():
+            return JsonResponse({
+                'error': 'Local LLM (Ollama) is not available.',
+                'available': False
+            }, status=503)
+        
+        project_info = {
+            'name': project.name,
+            'description': project.description,
+            'layer_count': project.layers.count()
+        }
+        
+        description = llm_service.generate_map_description(project_info)
+        
+        return JsonResponse({
+            'description': description,
+            'project_name': project.name,
+            'available': True
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def test_ollama_connection(request):
+    """Test the connection to Ollama"""
+    try:
+        llm_service = LocalLLMService()
+        status = llm_service.test_connection()
+        
+        return JsonResponse(status)
+        
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e),
+            'available': False
+        }, status=500)
+
+
+@login_required
+def ai_analysis_page(request, project_id):
+    """AI Analysis page for a project"""
+    project = get_object_or_404(MundiMapProject, id=project_id, created_by=request.user)
+    layers = project.layers.all()
+    
+    context = {
+        'project': project,
+        'layers': layers,
+    }
+    
+    return render(request, 'mundi_gis/ai_analysis.html', context)

@@ -1,0 +1,311 @@
+{% extends 'mundi_gis/base.html' %}
+
+{% block title %}AI Analysis - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- AI Analysis Header -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header bg-gradient-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-robot me-2"></i>AI Analysis with Local LLM
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5>Project: {{ project.name }}</h5>
+                        <p class="text-muted">{{ project.description|default:"No description provided." }}</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button id="testConnectionBtn" class="btn btn-outline-info">
+                            <i class="fas fa-wifi me-1"></i>Test Ollama Connection
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Connection Status -->
+    <div class="col-12 mb-4">
+        <div id="connectionStatus" class="card" style="display: none;">
+            <div class="card-body">
+                <div id="statusContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Analysis Tools -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-search me-2"></i>Layer Analysis
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="layerAnalysisForm">
+                    <div class="mb-3">
+                        <label for="layerSelect" class="form-label">Select Layer</label>
+                        <select class="form-control" id="layerSelect" required>
+                            <option value="">Choose a layer...</option>
+                            {% for layer in layers %}
+                                <option value="{{ layer.id }}">{{ layer.name }} ({{ layer.get_layer_type_display }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="analysisQuestion" class="form-label">Analysis Question</label>
+                        <textarea class="form-control" id="analysisQuestion" rows="3" 
+                                  placeholder="Ask about this layer (e.g., 'What can you tell me about this data?', 'What patterns do you see?')">Tell me about this layer</textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" id="analyzeBtn">
+                        <i class="fas fa-brain me-1"></i>Analyze with AI
+                    </button>
+                </form>
+                
+                <div id="analysisResult" class="mt-3" style="display: none;">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6>AI Analysis Result:</h6>
+                            <div id="analysisContent"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Styling Suggestions -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-palette me-2"></i>AI Styling Suggestions
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="stylingForm">
+                    <div class="mb-3">
+                        <label for="stylingLayerSelect" class="form-label">Select Layer for Styling</label>
+                        <select class="form-control" id="stylingLayerSelect" required>
+                            <option value="">Choose a layer...</option>
+                            {% for layer in layers %}
+                                <option value="{{ layer.id }}">{{ layer.name }} ({{ layer.get_layer_type_display }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success" id="suggestStylingBtn">
+                        <i class="fas fa-magic me-1"></i>Get Styling Suggestions
+                    </button>
+                </form>
+                
+                <div id="stylingResult" class="mt-3" style="display: none;">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6>AI Styling Suggestions:</h6>
+                            <div id="stylingContent"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Description Generator -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-edit me-2"></i>AI Project Description Generator
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Generate an AI-powered description for your map project based on its layers and metadata.</p>
+                
+                <button id="generateDescriptionBtn" class="btn btn-info">
+                    <i class="fas fa-robot me-1"></i>Generate AI Description
+                </button>
+                
+                <div id="descriptionResult" class="mt-3" style="display: none;">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6>AI Generated Description:</h6>
+                            <div id="descriptionContent"></div>
+                            <button id="useDescriptionBtn" class="btn btn-sm btn-primary mt-2">
+                                <i class="fas fa-save me-1"></i>Use This Description
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h6>AI is analyzing...</h6>
+                <p class="text-muted small">This may take a few moments with the local LLM</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Test Ollama connection
+    $('#testConnectionBtn').click(function() {
+        $.ajax({
+            url: '{% url "mundi_gis:test_ollama_connection" %}',
+            method: 'GET',
+            success: function(data) {
+                let statusClass = 'alert-info';
+                if (data.status === 'success') statusClass = 'alert-success';
+                else if (data.status === 'error') statusClass = 'alert-danger';
+                else if (data.status === 'warning') statusClass = 'alert-warning';
+                
+                $('#statusContent').html(`
+                    <div class="alert ${statusClass} mb-0">
+                        <strong>${data.status.toUpperCase()}:</strong> ${data.message}
+                        ${data.available_models ? '<br><small>Available models: ' + data.available_models.join(', ') + '</small>' : ''}
+                    </div>
+                `);
+                $('#connectionStatus').show();
+            },
+            error: function() {
+                $('#statusContent').html(`
+                    <div class="alert alert-danger mb-0">
+                        <strong>ERROR:</strong> Failed to test connection
+                    </div>
+                `);
+                $('#connectionStatus').show();
+            }
+        });
+    });
+
+    // Layer analysis
+    $('#layerAnalysisForm').submit(function(e) {
+        e.preventDefault();
+        
+        const layerId = $('#layerSelect').val();
+        const question = $('#analysisQuestion').val();
+        
+        if (!layerId) {
+            alert('Please select a layer');
+            return;
+        }
+        
+        $('#loadingModal').modal('show');
+        
+        $.ajax({
+            url: `/mundi/ai/analyze-layer/${layerId}/`,
+            method: 'POST',
+            data: {
+                question: question,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(data) {
+                $('#loadingModal').modal('hide');
+                if (data.available) {
+                    $('#analysisContent').html(data.analysis.replace(/\n/g, '<br>'));
+                    $('#analysisResult').show();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            },
+            error: function(xhr) {
+                $('#loadingModal').modal('hide');
+                const data = xhr.responseJSON;
+                alert('Error: ' + (data ? data.error : 'Failed to analyze layer'));
+            }
+        });
+    });
+
+    // Styling suggestions
+    $('#stylingForm').submit(function(e) {
+        e.preventDefault();
+        
+        const layerId = $('#stylingLayerSelect').val();
+        
+        if (!layerId) {
+            alert('Please select a layer');
+            return;
+        }
+        
+        $('#loadingModal').modal('show');
+        
+        $.ajax({
+            url: `/mundi/ai/suggest-styling/${layerId}/`,
+            method: 'GET',
+            success: function(data) {
+                $('#loadingModal').modal('hide');
+                if (data.available) {
+                    const styling = data.styling;
+                    $('#stylingContent').html(`
+                        <ul class="list-unstyled">
+                            <li><strong>Color Scheme:</strong> ${styling.color_scheme}</li>
+                            <li><strong>Opacity:</strong> ${styling.opacity}</li>
+                            <li><strong>Stroke Width:</strong> ${styling.stroke_width}</li>
+                            <li><strong>Point Size:</strong> ${styling.point_size}</li>
+                            <li><strong>Classification:</strong> ${styling.classification}</li>
+                        </ul>
+                    `);
+                    $('#stylingResult').show();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            },
+            error: function(xhr) {
+                $('#loadingModal').modal('hide');
+                const data = xhr.responseJSON;
+                alert('Error: ' + (data ? data.error : 'Failed to get styling suggestions'));
+            }
+        });
+    });
+
+    // Generate description
+    $('#generateDescriptionBtn').click(function() {
+        $('#loadingModal').modal('show');
+        
+        $.ajax({
+            url: '{% url "mundi_gis:ai_generate_description" project.id %}',
+            method: 'GET',
+            success: function(data) {
+                $('#loadingModal').modal('hide');
+                if (data.available) {
+                    $('#descriptionContent').html(data.description.replace(/\n/g, '<br>'));
+                    $('#descriptionResult').show();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            },
+            error: function(xhr) {
+                $('#loadingModal').modal('hide');
+                const data = xhr.responseJSON;
+                alert('Error: ' + (data ? data.error : 'Failed to generate description'));
+            }
+        });
+    });
+
+    // Use generated description
+    $('#useDescriptionBtn').click(function() {
+        const description = $('#descriptionContent').text();
+        alert('Description copied to clipboard! You can now paste it into the project description field.');
+    });
+});
+</script>
+{% endblock %} 

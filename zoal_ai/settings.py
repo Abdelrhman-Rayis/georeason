@@ -140,3 +140,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/mundi/'
 LOGOUT_REDIRECT_URL = '/'
+
+# Ollama Local LLM Configuration
+OLLAMA_BASE_URL = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434/v1')
+OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'orieg/gemma3-tools:1b')
+OLLAMA_API_KEY = os.getenv('OLLAMA_API_KEY', 'ollama')

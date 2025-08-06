@@ -22,4 +22,11 @@ urlpatterns = [
     
     # API webhooks
     path('webhook/', views.mundi_webhook, name='webhook'),
+    
+    # AI Analysis endpoints
+    path('ai/analyze-layer/<uuid:layer_id>/', views.ai_analyze_layer, name='ai_analyze_layer'),
+    path('ai/suggest-styling/<uuid:layer_id>/', views.ai_suggest_styling, name='ai_suggest_styling'),
+    path('ai/generate-description/<uuid:project_id>/', views.ai_generate_description, name='ai_generate_description'),
+    path('ai/test-connection/', views.test_ollama_connection, name='test_ollama_connection'),
+    path('projects/<uuid:project_id>/ai-analysis/', views.ai_analysis_page, name='ai_analysis_page'),
 ] 
