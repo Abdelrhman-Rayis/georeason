@@ -29,4 +29,8 @@ urlpatterns = [
     path('ai/generate-description/<uuid:project_id>/', views.ai_generate_description, name='ai_generate_description'),
     path('ai/test-connection/', views.test_ollama_connection, name='test_ollama_connection'),
     path('projects/<uuid:project_id>/ai-analysis/', views.ai_analysis_page, name='ai_analysis_page'),
+    
+    # Layer data endpoints
+    path('projects/<uuid:project_id>/layers/<int:layer_id>/data/', views.layer_data, name='layer_data'),
+    path('projects/<uuid:project_id>/layers-data/', views.project_layers_data, name='project_layers_data'),
 ] 

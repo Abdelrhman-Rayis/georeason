@@ -489,3 +489,61 @@ def ai_analysis_page(request, project_id):
     }
     
     return render(request, 'mundi_gis/ai_analysis.html', context)
+
+
+@login_required
+def layer_data(request, project_id, layer_id):
+    """Serve layer data as GeoJSON"""
+    project = get_object_or_404(MundiMapProject, id=project_id, created_by=request.user)
+    layer = get_object_or_404(MundiLayer, id=layer_id, project=project)
+    
+    try:
+        # Read the GeoJSON file
+        file_path = os.path.join(settings.MEDIA_ROOT, layer.file_path)
+        if os.path.exists(file_path):
+            with open(file_path, 'r') as f:
+                geojson_data = json.load(f)
+            
+            # Add layer metadata to the response
+            response_data = {
+                'layer_id': layer.id,
+                'layer_name': layer.name,
+                'layer_type': layer.layer_type,
+                'geojson': geojson_data
+            }
+            
+            return JsonResponse(response_data)
+        else:
+            return JsonResponse({'error': 'File not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def project_layers_data(request, project_id):
+    """Get all layers data for a project"""
+    project = get_object_or_404(MundiMapProject, id=project_id, created_by=request.user)
+    layers = project.layers.all()
+    
+    layers_data = []
+    for layer in layers:
+        try:
+            file_path = os.path.join(settings.MEDIA_ROOT, layer.file_path)
+            if os.path.exists(file_path):
+                with open(file_path, 'r') as f:
+                    geojson_data = json.load(f)
+                
+                layer_info = {
+                    'id': layer.id,
+                    'name': layer.name,
+                    'layer_type': layer.layer_type,
+                    'description': layer.description,
+                    'created_at': layer.created_at.isoformat(),
+                    'geojson': geojson_data
+                }
+                layers_data.append(layer_info)
+        except Exception as e:
+            print(f"Error loading layer {layer.name}: {e}")
+            continue
+    
+    return JsonResponse({'layers': layers_data})
