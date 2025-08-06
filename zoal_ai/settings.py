@@ -143,5 +143,5 @@ LOGOUT_REDIRECT_URL = '/'
 
 # Ollama Local LLM Configuration
 OLLAMA_BASE_URL = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434/v1')
-OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'orieg/gemma3-tools:1b')
+OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'gemma3:4b')
 OLLAMA_API_KEY = os.getenv('OLLAMA_API_KEY', 'ollama')
