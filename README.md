@@ -1,258 +1,298 @@
-# Zoal AI - AI-Powered Chatbot & GIS Platform
+# GeoReason: AI-Powered GIS Platform
 
-A comprehensive Django application featuring an AI-powered chatbot with knowledge about Sudanese and African culture, plus a modern Geographic Information System (GIS) powered by Mundi AI.
+## 🌍 Overview
 
-## 🌟 Features
+GeoReason is a comprehensive AI-powered Geographic Information System (GIS) platform that combines the best features of Django-based GIS applications with the modern [Mundi.ai](https://github.com/BuntingLabs/mundi.ai) platform. This project provides both a standalone Django application and an integrated solution with the official Mundi.ai project.
 
-### 🤖 AI Chatbot
-- **Multi-Model Support**: OpenAI GPT-3.5 and Google Gemini integration
-- **Cultural Knowledge**: Specialized in Sudanese and African culture
-- **Session Management**: Persistent chat history and context
-- **Real-time Responses**: Fast, intelligent AI responses
-- **Modern UI**: Beautiful, responsive chat interface
+## 🚀 Features
 
-### 🗺️ Mundi GIS Platform
-- **Map Project Management**: Create, edit, and organize geographic data projects
-- **Multi-Format Support**: GeoJSON, Shapefile, GeoTIFF, LAS/LAZ, CSV
-- **AI-Powered Analysis**: Integration with Mundi AI for advanced geospatial analysis
-- **Map Rendering**: Generate high-quality map images for reports
-- **Modern Dashboard**: Beautiful, responsive interface with statistics
-- **User Management**: Secure authentication and project ownership
+### ✅ Core GIS Capabilities
+- **Interactive Mapping**: OpenStreetMap integration with Leaflet.js
+- **File Upload**: Support for GeoJSON, Shapefiles, and other spatial data formats
+- **Layer Management**: Advanced layer organization and styling
+- **Project Management**: Create, organize, and manage GIS projects
+- **User Authentication**: Secure user management system
 
-## 🚀 Quick Start
+### 🤖 AI-Powered Features
+- **Local LLM Integration**: Full Ollama support for local AI processing
+- **GIS Analysis**: AI-powered spatial data analysis
+- **Project Descriptions**: AI-generated project descriptions
+- **Styling Suggestions**: AI recommendations for layer styling
+- **Real-time Analysis**: Interactive AI chat for GIS queries
+
+### 🏗️ Architecture Options
+
+#### Option 1: Django Application (Current)
+- **Framework**: Django 5.1.4
+- **Database**: SQLite (easily upgradable to PostgreSQL)
+- **Frontend**: Bootstrap 5 + Leaflet.js
+- **AI**: Local Ollama integration
+- **Deployment**: Simple Django deployment
+
+#### Option 2: Mundi.ai Integration (Advanced)
+- **Framework**: FastAPI + TypeScript + React
+- **Database**: PostgreSQL with PostGIS
+- **Frontend**: Modern React interface
+- **AI**: Enhanced local LLM + cloud AI options
+- **Deployment**: Docker Compose with microservices
+
+## 📦 Installation
 
 ### Prerequisites
-- Python 3.8+
-- Git
-- Virtual environment (recommended)
+```bash
+# Install Python 3.11+
+python3 --version
 
-### Installation
+# Install Ollama for local AI
+curl -fsSL https://ollama.ai/install.sh | sh
 
-1. **Clone the Repository**
-   ```bash
-   git clone <your-github-repo-url>
-   cd zoal_ai
-   ```
-
-2. **Create Virtual Environment**
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. **Install Dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Environment Setup**
-   Create a `.env` file in the project root:
-   ```env
-   # Django Settings
-   SECRET_KEY=your-django-secret-key-here
-   DEBUG=True
-   
-   # AI API Keys
-   OPENAI_API_KEY=your-openai-api-key
-   GOOGLE_API_KEY=your-google-api-key
-   
-   # Mundi AI Integration
-   MUNDI_API_BASE_URL=https://app.mundi.ai/api
-   MUNDI_API_KEY=your-mundi-api-key
-   ```
-
-5. **Database Setup**
-   ```bash
-   python manage.py makemigrations
-   python manage.py migrate
-   ```
-
-6. **Create Superuser**
-   ```bash
-   python manage.py createsuperuser
-   ```
-
-7. **Run Development Server**
-   ```bash
-   python manage.py runserver
-   ```
-
-## 📱 Usage
-
-### AI Chatbot
-- **Access**: `http://localhost:8000/`
-- **Features**: 
-  - Choose between OpenAI and Google AI models
-  - Chat about Sudanese and African culture
-  - View chat history
-  - Real-time responses
-
-### Mundi GIS Platform
-- **Access**: `http://localhost:8000/mundi/`
-- **Login**: Use your superuser credentials
-- **Features**:
-  - Create map projects
-  - Upload GIS layers
-  - Render maps
-  - Manage geographic data
-
-### Admin Interface
-- **Access**: `http://localhost:8000/admin/`
-- **Features**: Manage users, projects, and system settings
-
-## 🏗️ Project Structure
-
+# Pull a model (e.g., gemma3:4b)
+ollama pull gemma3:4b
 ```
-zoal_ai/
-├── chatbot/                 # AI Chatbot Application
-│   ├── models.py           # Chat session and message models
-│   ├── views.py            # Chat interface and AI integration
-│   ├── urls.py             # Chatbot URL routing
-│   └── templates/          # Chat interface templates
-│
-├── mundi_gis/              # GIS Platform Application
-│   ├── models.py           # Map projects, layers, renders
-│   ├── views.py            # GIS management views
-│   ├── forms.py            # Data input forms
-│   ├── admin.py            # Django admin configuration
-│   ├── urls.py             # GIS URL routing
-│   └── templates/          # GIS interface templates
-│
-├── zoal_ai/                # Main Django Project
-│   ├── settings.py         # Django configuration
-│   ├── urls.py             # Main URL routing
-│   └── views.py            # Authentication views
-│
-├── templates/              # Global templates
-│   ├── auth/               # Authentication templates
-│   └── mundi_gis/          # GIS templates
-│
-├── static/                 # Static files (CSS, JS, images)
-├── media/                  # Uploaded files
-├── requirements.txt        # Python dependencies
-├── manage.py              # Django management script
-└── README.md              # This file
+
+### Quick Start (Django Version)
+```bash
+# Clone the repository
+git clone https://github.com/Abdelrhman-Rayis/georeason.git
+cd georeason
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your configuration
+
+# Run migrations
+python3 manage.py migrate
+
+# Create superuser
+python3 manage.py createsuperuser
+
+# Start the development server
+python3 manage.py runserver
+
+# Start Ollama (in another terminal)
+ollama serve
+```
+
+### Advanced Setup (Mundi.ai Integration)
+```bash
+# Clone the Mundi.ai integration branch
+git clone -b mundi-integration https://github.com/Abdelrhman-Rayis/georeason.git
+cd georeason
+
+# Start with Docker Compose
+docker-compose up -d
+
+# Or run locally
+pip install -r requirements.txt
+uvicorn src.wsgi:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 ## 🔧 Configuration
 
-### AI Models Configuration
-
-#### OpenAI Integration
-1. Get your API key from [OpenAI Platform](https://platform.openai.com/)
-2. Add to `.env`: `OPENAI_API_KEY=your-key-here`
-3. The chatbot will use GPT-3.5-turbo by default
-
-#### Google Gemini Integration
-1. Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Add to `.env`: `GOOGLE_API_KEY=your-key-here`
-3. The chatbot will use Gemini 1.5 Flash
-
-### Mundi AI Integration
-1. Sign up at [app.mundi.ai](https://app.mundi.ai)
-2. Get your API key from the Mundi dashboard
-3. Add to `.env`:
-   ```env
-   MUNDI_API_BASE_URL=https://app.mundi.ai/api
-   MUNDI_API_KEY=your-mundi-api-key
-   ```
-
-## 📊 Supported GIS File Formats
-
-### Vector Data
-- **GeoJSON (.geojson)** - Points, lines, polygons
-- **Shapefile (.shp)** - ESRI shapefile format
-- **CSV (.csv)** - Point data with coordinates
-
-### Raster & Point Cloud Data
-- **GeoTIFF (.tif)** - Satellite imagery, elevation data
-- **LAS/LAZ (.las/.laz)** - LiDAR point cloud data
-
-## 🛠️ Development
-
-### Running Tests
+### Environment Variables
 ```bash
-python manage.py test
+# Django Settings
+SECRET_KEY=your-secret-key
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1
+
+# Ollama Settings
+OLLAMA_BASE_URL=http://localhost:11434/v1
+OLLAMA_MODEL=gemma3:4b
+OLLAMA_API_KEY=ollama
+
+# Mundi.ai Settings (for integration)
+MUNDI_API_KEY=your-mundi-api-key
+POSTGRES_HOST=localhost
+POSTGRES_DB=georeason
+POSTGRES_USER=georeason_user
+POSTGRES_PASSWORD=your-password
 ```
 
-### Code Style
+## 🎯 Usage
+
+### 1. Create a Project
+1. Navigate to `/mundi/` (Django) or the main interface (Mundi.ai)
+2. Click "Create New Project"
+3. Enter project name and description
+4. Start adding layers
+
+### 2. Upload Spatial Data
+1. Select your project
+2. Click "Upload Layer"
+3. Choose your file (GeoJSON, Shapefile, etc.)
+4. Configure layer settings
+5. View on the interactive map
+
+### 3. AI Analysis
+1. Select a layer
+2. Click "AI Analysis"
+3. Ask questions about your data
+4. Get AI-powered insights and suggestions
+
+### 4. Interactive Mapping
+- **Zoom/Pan**: Navigate the map
+- **Layer Control**: Toggle layer visibility
+- **Drawing Tools**: Add markers, lines, polygons
+- **Search**: Find locations worldwide
+- **Fullscreen**: Toggle fullscreen mode
+
+## 🔌 API Endpoints
+
+### Local LLM API (Mundi.ai Integration)
+- `GET /api/local-llm/status` - Check LLM availability
+- `GET /api/local-llm/models` - List available Ollama models
+- `POST /api/local-llm/analyze-layer` - Analyze GIS layers
+- `POST /api/local-llm/generate-description` - Generate project descriptions
+- `POST /api/local-llm/suggest-styling` - Get styling suggestions
+- `POST /api/local-llm/chat` - General chat completion
+- `GET /api/local-llm/health` - Health check
+
+### Example API Usage
 ```bash
-# Install development dependencies
-pip install black flake8
+# Check LLM status
+curl http://localhost:8000/api/local-llm/status
 
-# Format code
-black .
-
-# Check code style
-flake8 .
+# Analyze a layer
+curl -X POST http://localhost:8000/api/local-llm/analyze-layer \
+  -H "Content-Type: application/json" \
+  -d '{
+    "layer_id": "layer-123",
+    "question": "What can you tell me about this data?",
+    "layer_info": {
+      "name": "Population Data",
+      "layer_type": "vector",
+      "feature_count": 1000,
+      "geometry_type": "Point"
+    }
+  }'
 ```
 
-### Database Migrations
-```bash
-# Create migrations
-python manage.py makemigrations
+## 🏗️ Project Structure
 
-# Apply migrations
-python manage.py migrate
+```
+georeason/
+├── chatbot/                 # Django chatbot app
+├── mundi_gis/              # Django GIS app
+│   ├── models.py           # GIS data models
+│   ├── views.py            # GIS views and logic
+│   ├── local_llm.py        # Ollama integration
+│   └── templates/          # HTML templates
+├── static/                 # Static files (CSS, JS, images)
+├── templates/              # Base templates
+├── media/                  # Uploaded files
+├── requirements.txt        # Python dependencies
+├── manage.py              # Django management
+├── INTEGRATION_PLAN.md     # Mundi.ai integration plan
+├── DJANGO_INTEGRATION.md   # Technical integration guide
+└── README.md              # This file
 ```
 
-## 🚀 Deployment
+## 🔄 Migration Path
 
-### Production Settings
-1. Set `DEBUG=False` in settings
-2. Configure production database (PostgreSQL recommended)
-3. Set up static file serving
-4. Configure environment variables
-5. Set up SSL certificates
+### From Django to Mundi.ai Integration
+1. **Export Data**: Use Django admin to export your data
+2. **Setup Mundi.ai**: Follow the integration guide
+3. **Import Data**: Use Mundi.ai's data import tools
+4. **Configure AI**: Set up Ollama and models
+5. **Test Features**: Verify all functionality works
 
-### Docker Deployment
-```dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-
-COPY . .
-RUN python manage.py collectstatic --noinput
-
-EXPOSE 8000
-CMD ["gunicorn", "zoal_ai.wsgi:application", "--bind", "0.0.0.0:8000"]
-```
+### Benefits of Migration
+- **Modern Stack**: FastAPI + TypeScript + React
+- **Scalability**: Microservices architecture
+- **Advanced Features**: Enhanced AI capabilities
+- **Community**: Active Mundi.ai community
+- **Standards**: Industry-standard GIS tools
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
+4. **Push** to the branch (`git push origin feature/amazing-feature`)
+5. **Open** a Pull Request
 
-## 📝 License
+### Development Setup
+```bash
+# Install development dependencies
+pip install -r requirements-dev.txt
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+# Run tests
+python3 manage.py test
+
+# Run linting
+flake8 .
+black .
+```
+
+## 📚 Documentation
+
+- [Integration Plan](INTEGRATION_PLAN.md) - Comprehensive integration strategy
+- [Django Integration](DJANGO_INTEGRATION.md) - Technical implementation guide
+- [Mundi.ai Documentation](https://docs.mundi.ai) - Official Mundi.ai docs
+- [API Reference](https://docs.mundi.ai/api) - API documentation
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+#### Ollama Not Available
+```bash
+# Check if Ollama is running
+curl http://localhost:11434/api/tags
+
+# Start Ollama if not running
+ollama serve
+```
+
+#### Model Not Found
+```bash
+# List available models
+ollama list
+
+# Pull the required model
+ollama pull gemma3:4b
+```
+
+#### Database Issues
+```bash
+# Reset migrations
+python3 manage.py makemigrations
+python3 manage.py migrate
+
+# Create superuser
+python3 manage.py createsuperuser
+```
+
+## 📄 License
+
+This project is licensed under the AGPL-3.0 License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
-- **Django**: Web framework
-- **OpenAI**: GPT-3.5-turbo integration
-- **Google AI**: Gemini integration
-- **Mundi AI**: GIS platform integration
-- **Bootstrap**: UI components
-- **Font Awesome**: Icons
+- [Mundi.ai](https://github.com/BuntingLabs/mundi.ai) - The amazing open-source GIS platform
+- [Ollama](https://ollama.ai) - Local LLM framework
+- [OpenStreetMap](https://openstreetmap.org) - Open mapping data
+- [Leaflet.js](https://leafletjs.com) - Interactive maps library
+- [Django](https://djangoproject.com) - Web framework
+- [FastAPI](https://fastapi.tiangolo.com) - Modern API framework
 
 ## 📞 Support
 
-- **Issues**: Report bugs and feature requests via GitHub issues
-- **Documentation**: Check the inline code documentation
-- **Community**: Join our community discussions
+- **Issues**: [GitHub Issues](https://github.com/Abdelrhman-Rayis/georeason/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Abdelrhman-Rayis/georeason/discussions)
+- **Documentation**: [Project Wiki](https://github.com/Abdelrhman-Rayis/georeason/wiki)
+- **Mundi.ai Community**: [Discord](https://discord.gg/mundi-ai)
 
-## 🔄 Version History
+## 🌟 Star History
 
-- **v1.0.0**: Initial release with chatbot and basic GIS functionality
-- **v1.1.0**: Added Mundi AI integration and advanced GIS features
-- **v1.2.0**: Enhanced UI and authentication system
+[![Star History Chart](https://api.star-history.com/svg?repos=Abdelrhman-Rayis/georeason&type=Date)](https://star-history.com/#Abdelrhman-Rayis/georeason&Date)
 
 ---
 
-**Built with ❤️ for the Sudanese and African community** 
+**Made with ❤️ by the GeoReason Team**
+
+*Empowering GIS with AI, one map at a time.* 
